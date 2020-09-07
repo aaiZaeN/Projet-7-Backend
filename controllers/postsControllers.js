@@ -1,0 +1,25 @@
+const Post = require('../database/models/post.model');
+
+exports.postList = (req, res, next) => {
+  try {
+    const posts = await Post.find({}).exec();
+    res.render('posts/postList', {posts});
+  } catch(e) {
+    next(e);
+  }
+}
+
+exports.postNew = (req, res, next) => {
+  res.render('posts/postForm');
+}
+
+exports.postCreate =  async (req, res, next) => {
+  try {
+    const body = req.body;
+    const newPost = new post(body);
+    await newPost.save();
+  } catch(e) {
+    const errors = Object.keys(e.errors).map( key => e.errors[key].message);
+    res.status(400).render('posts/postForm', { errors });
+  }
+}
