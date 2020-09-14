@@ -1,4 +1,3 @@
-
 const postSchema = schema({
   content: { 
     type: String,
