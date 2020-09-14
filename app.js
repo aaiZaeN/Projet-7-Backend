@@ -25,10 +25,10 @@ con.connect(function(err) {
 app.use(morgan('short'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(index);
 
 
 //gestion d'erreur en mode dev
-app.use(index);
 
 if (process.env.NODE_ENV === 'development') {
   app.use(errorHandler());
