@@ -17,6 +17,10 @@ module.exports = {
       return res.status(400).json({ 'error': 'missing parameters' });
     }
 
+    if (username.lenght >= 13 || username.lenght <=4) {
+      return res.status(400).json({ 'error': 'wrong username (must be lenght 5-12' });
+    }
+
     // Verify usernam lenght, mail regex, password etc.
 
       models.User.findOne({
