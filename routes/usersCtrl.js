@@ -82,36 +82,6 @@ module.exports = {
         return res.status(500).json({ 'error': 'cannot add user' });
       }
     });
-      models.User.findOne({
-        attributes: ['email'],
-        where: { email: email }
-      })
-      .then(function(userFound) {
-        if (!userFound) {
-
-          bcrypt.hash(password, 5, function( err, bcryptedPassword ) {
-            const newUser = models.USer.create({
-              email: email,
-              username: username,
-              password: bcryptedPassword,
-              bio: bio, 
-              isAdmin: 0
-            })
-            .then(function(newUser) {
-              return res.status(201).json({
-                'userId': newUser.id
-              })
-            })
-            .catch(function(err) {
-              return res.status(500).json({ 'error': 'cannot add user' });
-            });
-          });
-
-        } else {
-          return res.status(409).json({ 'error': 'user already exist' });
-        }
-      })
-
   },
   login: function (req, res) {
 
