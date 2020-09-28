@@ -3,6 +3,10 @@ const bcrypt = require('bcrypt');
 const jwtUtils = require('../utils/jwt.utils');
 const models = require('../models');
 
+// Regex
+const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+const passwordRegex = /^(?=.*\d).{4,8}$/;
+
 // Routes
 module.exports = {
   register: function(req, res) {
@@ -20,6 +24,15 @@ module.exports = {
     if (username.lenght >= 13 || username.lenght <=4) {
       return res.status(400).json({ 'error': 'wrong username (must be lenght 5-12' });
     }
+
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ 'error': 'email is not valid' });
+    }
+
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({ 'error': 'password invalid (must lenght 4-8 and include 1 number' });
+    }
+    
 
     // Verify usernam lenght, mail regex, password etc.
 
