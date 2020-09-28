@@ -2,6 +2,7 @@
 const bcrypt = require('bcrypt');
 const jwtUtils = require('../utils/jwt.utils');
 const models = require('../models');
+const asyncLib = require('async');
 
 // Regex
 const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -17,6 +18,8 @@ module.exports = {
     const password = req.body.password;
     const bio = req.body.bio;
 
+
+    // Verify usernam lenght, mail regex, password etc.
     if (email == null || username == null || password == null) {
       return res.status(400).json({ 'error': 'missing parameters' });
     }
@@ -32,10 +35,53 @@ module.exports = {
     if (!passwordRegex.test(password)) {
       return res.status(400).json({ 'error': 'password invalid (must lenght 4-8 and include 1 number' });
     }
-    
 
-    // Verify usernam lenght, mail regex, password etc.
-
+    asyncLib.waterfall([
+      function(done) {
+        models.user.findOne({
+          attributes: ['email'],
+          where: { email: email }
+      })
+      .then(function(userFound) {
+        done(null, userFound);
+      })
+      .catch(function(err) {
+        return res.status(500).json({ 'error': 'unable to verify user' });
+      });
+    },
+      function(userFound, done) {
+        if (!userFound) {
+          bcrypt.hash(password, 5, function( err, bcryptedPassword ) {
+            done(null, userFound, bcryptedPassword);
+          });
+        } else {
+          return res.status(409).json({ 'error': 'user already exist' });
+        }
+      },
+      function(userFound, bcryptedPassword, done) {
+        let newUser = models.User.create({
+          email: email,
+          username: username,
+          password: bcryptedPassword,
+          bio: bio,
+          isAdmin: 0
+        })
+        .then(function(newUser) {
+          done(newUser);
+        })
+        .catch(function(err) {
+          return res.status(500).json({ 'error': 'cannot add user' });
+        });
+      }
+    ], function(newUser) {
+      if (newUser) {
+        return res.status(201).json({
+          'userId': newUser.id
+        });
+      } else {
+        return res.status(500).json({ 'error': 'cannot add user' });
+      }
+    });
       models.User.findOne({
         attributes: ['email'],
         where: { email: email }
