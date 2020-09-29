@@ -1,7 +1,6 @@
+const sequelize = require('sequelize');
+
 'use strict';
-const {
-  Model
-} = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
  let Groupopost = sequelize.define('Groupopost', {
    idUSERS: DataTypes.INTEGER,
