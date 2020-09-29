@@ -16,7 +16,6 @@ module.exports = {
     const email = req.body.email;
     const username = req.body.username;
     const password = req.body.password;
-    const bio = req.body.bio;
 
 
     // Verify usernam lenght, mail regex, password etc.
@@ -63,7 +62,6 @@ module.exports = {
           email: email,
           username: username,
           password: bcryptedPassword,
-          bio: bio,
           isAdmin: 0
         })
         .then(function(newUser) {
@@ -119,4 +117,33 @@ module.exports = {
       return res.status(500).json({ 'error': 'unable to verify user' });
     });
   }
+}
+getUserProfile: function(req, res) {
+  //Getting auth header
+  let headerAuth = req.headers['authorization'];
+  let userId = jwtUtils.getUserId(headerAuth);
+
+  if (userId < 0)
+    return res.status(400).json({ 'error': 'wrong token' });
+
+  models.User.findOne({
+    attributes: [ 'id', 'email', 'username' ],
+    where: { id: userId }
+  }).then(function(user) {
+    if (user) {
+      res.status(201).json(user);
+    } else {
+      res.status(404).json({ 'error': 'user not found' });
+    }
+  }).catch(function(err) {
+    res.status(500).json({ 'error': 'cannot fetch user' });
+  });
+}
+updateUserProfile: function(req, res) {
+  // GEtting auth header
+  let headerAuth = req.headers['authorization'];
+  let userId = jwtUtils.getUserId(headerAuth);
+
+  // Params
+  
 }
