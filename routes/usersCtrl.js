@@ -94,56 +94,16 @@ module.exports = {
     // Regex & password lenght.
 
     models.User.findOne({
-      where: { email: email }
-    })
-    .then(function(userFound) {
-      if (userFound) {
-
-        bcrypt.compare(password, userFound.password, function(errBycrypt, resBycrypt) {
-          if(resBycrypt) {
-            return res.status(200).json({
-              'userId': userFound.id,
-              'token': jwtUtils.generateTokenForUser(userFound)
-            });
-          } else {
-            return res.status(403).json({ 'error': 'invalid password' });
-          }
-        });
+      attributes: [ 'id', 'email', 'username' ],
+      where: { id: userId }
+    }).then(function(user) {
+      if (user) {
+        res.status(201).json(user);
       } else {
-        return res.status(404).json({ 'error': 'user not exist in DB' });
+        res.status(404).json({ 'error': 'user not found' });
       }
-    })
-    .catch(function(err) {
-      return res.status(500).json({ 'error': 'unable to verify user' });
+    }).catch(function(err) {
+      res.status(500).json({ 'error': 'cannot fetch user' });
     });
-  }
-}
-getUserProfile: function(req, res) {
-  //Getting auth header
-  let headerAuth = req.headers['authorization'];
-  let userId = jwtUtils.getUserId(headerAuth);
-
-  if (userId < 0)
-    return res.status(400).json({ 'error': 'wrong token' });
-
-  models.User.findOne({
-    attributes: [ 'id', 'email', 'username' ],
-    where: { id: userId }
-  }).then(function(user) {
-    if (user) {
-      res.status(201).json(user);
-    } else {
-      res.status(404).json({ 'error': 'user not found' });
-    }
-  }).catch(function(err) {
-    res.status(500).json({ 'error': 'cannot fetch user' });
-  });
-}
-updateUserProfile: function(req, res) {
-  // GEtting auth header
-  let headerAuth = req.headers['authorization'];
-  let userId = jwtUtils.getUserId(headerAuth);
-
-  // Params
-  
+  },
 }
