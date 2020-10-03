@@ -14,16 +14,21 @@ module.exports = {
 
     // Params
     const email = req.body.email;
-    const username = req.body.username;
+    const lastName = req.body.lastName;
+    const firstName = req.body.firstName;
     const password = req.body.password;
 
 
     // Verify usernam lenght, mail regex, password etc.
-    if (email == null || username == null || password == null) {
+    if (email == null || lastName == null || firstName == null || password == null) {
       return res.status(400).json({ 'error': 'missing parameters' });
     }
 
-    if (username.lenght >= 13 || username.lenght <=4) {
+    if (lastName.length >= 13 || lastName.length <=2) {
+      return res.status(400).json({ 'error': 'wrong username (must be lenght 5-12' });
+    }
+
+    if (firstName.length >= 13 || firstName.length <=2) {
       return res.status(400).json({ 'error': 'wrong username (must be lenght 5-12' });
     }
 
@@ -37,7 +42,7 @@ module.exports = {
 
     asyncLib.waterfall([
       function(done) {
-        models.user.findOne({
+        models.User.findOne({
           attributes: ['email'],
           where: { email: email }
       })
@@ -60,7 +65,8 @@ module.exports = {
       function(userFound, bcryptedPassword, done) {
         let newUser = models.User.create({
           email: email,
-          username: username,
+          lastName: lastName,
+          firstName: firstName,
           password: bcryptedPassword,
           isAdmin: 0
         })
@@ -81,29 +87,53 @@ module.exports = {
       }
     });
   },
-  login: function (req, res) {
-
+  login: function(req, res) {
+    
     // Params
-    const email = req.body.email;
-    const password = req.body.password;
+    let email    = req.body.email;
+    let password = req.body.password;
 
-    if (email == null || password == null) {
+    if (email == null ||  password == null) {
       return res.status(400).json({ 'error': 'missing parameters' });
     }
 
-    // Regex & password lenght.
-
-    models.User.findOne({
-      attributes: [ 'id', 'email', 'username' ],
-      where: { id: userId }
-    }).then(function(user) {
-      if (user) {
-        res.status(201).json(user);
-      } else {
-        res.status(404).json({ 'error': 'user not found' });
+    asyncLib.waterfall([
+      function(done) {
+        models.User.findOne({
+          where: { email: email }
+        })
+        .then(function(userFound) {
+          done(null, userFound);
+        })
+        .catch(function(err) {
+          return res.status(500).json({ 'error': 'unable to verify user' });
+        });
+      },
+      function(userFound, done) {
+        if (userFound) {
+          bcrypt.compare(password, userFound.password, function(errBycrypt, resBycrypt) {
+            done(null, userFound, resBycrypt);
+          });
+        } else {
+          return res.status(404).json({ 'error': 'user not exist in DB' });
+        }
+      },
+      function(userFound, resBycrypt, done) {
+        if(resBycrypt) {
+          done(userFound);
+        } else {
+          return res.status(403).json({ 'error': 'invalid password' });
+        }
       }
-    }).catch(function(err) {
-      res.status(500).json({ 'error': 'cannot fetch user' });
+    ], function(userFound) {
+      if (userFound) {
+        return res.status(201).json({
+          'userId': userFound.id,
+          'token': jwtUtils.generateTokenForUser(userFound)
+        });
+      } else {
+        return res.status(500).json({ 'error': 'cannot log on user' });
+      }
     });
   },
 }
