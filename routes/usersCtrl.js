@@ -19,17 +19,17 @@ module.exports = {
     const password = req.body.password;
 
 
-    // Verify usernam lenght, mail regex, password etc.
+    // Verify usernam length, mail regex, password etc.
     if (email == null || lastName == null || firstName == null || password == null) {
       return res.status(400).json({ 'error': 'missing parameters' });
     }
 
     if (lastName.length >= 13 || lastName.length <=2) {
-      return res.status(400).json({ 'error': 'wrong username (must be lenght 5-12' });
+      return res.status(400).json({ 'error': 'wrong last name (must be length 5-12' });
     }
 
     if (firstName.length >= 13 || firstName.length <=2) {
-      return res.status(400).json({ 'error': 'wrong username (must be lenght 5-12' });
+      return res.status(400).json({ 'error': 'wrong first name (must be length 5-12' });
     }
 
     if (!emailRegex.test(email)) {

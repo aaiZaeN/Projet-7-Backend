@@ -11,12 +11,13 @@ const itemsLimit = 50;
 module.exports = {
   createGroupopost: function(req, res) {
     // Getting auth header
-    var headerAuth  = req.headers['authorization'];
-    var userId      = jwtUtils.getUserId(headerAuth);
+    console.log('test5')
+    let headerAuth  = req.headers['authorization'];
+    let userId      = jwtUtils.getUserId(headerAuth);
 
     // Params
-    var title   = req.body.title;
-    var content = req.body.content;
+    let title   = req.body.title;
+    let content = req.body.content;
 
     if (title == null || content == null) {
       return res.status(400).json({ 'error': 'missing parameters' });
@@ -25,13 +26,14 @@ module.exports = {
     if (title.length <= titleLimit || content.length <= contentLimit) {
       return res.status(400).json({ 'error': 'invalid parameters' });
     }
-
+console.log('test4')
     asyncLib.waterfall([
       function(done) {
         models.User.findOne({
           where: { id: userId }
         })
         .then(function(userFound) {
+          console.log('test3', userFound)
           done(null, userFound);
         })
         .catch(function(err) {
@@ -39,18 +41,23 @@ module.exports = {
         });
       },
       function(userFound, done) {
+        console.log('test', {
+          title  : title,
+          content: content,
+          userId : userFound.dataValues.id
+        })
         if(userFound) {
-          models.Groupopost.create({
+          models.GroupoPost.create({
             title  : title,
             content: content,
-            likes  : 0,
-            UserId : userFound.id
+            user: {id: userFound.dataValues.id} 
           })
           .then(function(newGroupopost) {
+            console.log('test2')
             done(newGroupopost);
-          });
+          }).catch(err => {console.log('err', err)})
         } else {
-          res.status(404).json({ 'error': 'user not found' });
+          return res.status(404).json({ 'error': 'user not found' });
         }
       },
     ], function(newGroupopost) {
@@ -62,23 +69,23 @@ module.exports = {
     });
   },
   listGroupoposts: function(req, res) {
-    var fields  = req.query.fields;
-    var limit   = parseInt(req.query.limit);
-    var offset  = parseInt(req.query.offset);
-    var order   = req.query.order;
+    let fields  = req.query.fields;
+    let limit   = parseInt(req.query.limit);
+    let offset  = parseInt(req.query.offset);
+    let order   = req.query.order;
 
     if (limit > itemsLimit) {
-      limit = itemsLimit;
+        limit = itemsLimit;
     }
 
-    models.Groupoposts.findAll({
+    models.Groupopost.findAll({
       order: [(order != null) ? order.split(':') : ['title', 'ASC']],
       attributes: (fields !== '*' && fields != null) ? fields.split(',') : null,
       limit: (!isNaN(limit)) ? limit : null,
       offset: (!isNaN(offset)) ? offset : null,
       include: [{
         model: models.User,
-        attributes: [ 'username' ]
+        attributes: [ 'lastName', 'firstName' ]
       }]
     }).then(function(groupoposts) {
       if (groupoposts) {
