@@ -11,9 +11,9 @@ const itemsLimit = 50;
 module.exports = {
   createGroupopost: function(req, res) {
     // Getting auth header
-    console.log('test5')
-    let headerAuth  = req.headers['authorization'];
-    let userId      = jwtUtils.getUserId(headerAuth);
+    console.log('test1')
+    let headerAuth = req.headers['authorization'];
+    let idUSERS = jwtUtils.getUserId(headerAuth);
 
     // Params
     let title   = req.body.title;
@@ -26,11 +26,11 @@ module.exports = {
     if (title.length <= titleLimit || content.length <= contentLimit) {
       return res.status(400).json({ 'error': 'invalid parameters' });
     }
-console.log('test4')
+console.log('test2')
     asyncLib.waterfall([
       function(done) {
         models.User.findOne({
-          where: { id: userId }
+          where: { id: idUSERS }
         })
         .then(function(userFound) {
           console.log('test3', userFound)
@@ -41,23 +41,23 @@ console.log('test4')
         });
       },
       function(userFound, done) {
-        console.log('test', {
+        console.log('test3', {
           title  : title,
           content: content,
-          userId : userFound.dataValues.id
+          IdUSERS : userFound.id
         })
         if(userFound) {
-          models.GroupoPost.create({
+          models.Groupopost.create({
             title  : title,
             content: content,
-            user: {id: userFound.dataValues.id} 
+            UserId: userFound.id
           })
           .then(function(newGroupopost) {
-            console.log('test2')
+            console.log('test4')
             done(newGroupopost);
           }).catch(err => {console.log('err', err)})
         } else {
-          return res.status(404).json({ 'error': 'user not found' });
+            res.status(404).json({ 'error': 'user not found' });
         }
       },
     ], function(newGroupopost) {
@@ -75,18 +75,14 @@ console.log('test4')
     let order   = req.query.order;
 
     if (limit > itemsLimit) {
-        limit = itemsLimit;
+      limit = itemsLimit;
     }
 
     models.Groupopost.findAll({
       order: [(order != null) ? order.split(':') : ['title', 'ASC']],
       attributes: (fields !== '*' && fields != null) ? fields.split(',') : null,
       limit: (!isNaN(limit)) ? limit : null,
-      offset: (!isNaN(offset)) ? offset : null,
-      include: [{
-        model: models.User,
-        attributes: [ 'lastName', 'firstName' ]
-      }]
+      offset: (!isNaN(offset)) ? offset : null
     }).then(function(groupoposts) {
       if (groupoposts) {
         res.status(200).json(groupoposts);

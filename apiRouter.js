@@ -5,11 +5,12 @@ const groupopostsCtrl = require('./routes/groupopostsCtrl');
 
 //Router
 exports.router = (function() {
-  const apiRouter = express.Router();
+  let apiRouter = express.Router();
 
   // Users routes
-  apiRouter.route('/user/register/').post(usersCtrl.register);
-  apiRouter.route('/user/login/').post(usersCtrl.login);
+  apiRouter.route('/users/register/').post(usersCtrl.register);
+  apiRouter.route('/users/login/').post(usersCtrl.login);
+  apiRouter.route('/users/me').get(usersCtrl.getUserProfil);
 
   // Groupoposts routes
   apiRouter.route('/groupoposts/new/').post(groupopostsCtrl.createGroupopost);

@@ -13,10 +13,10 @@ module.exports = {
   register: function(req, res) {
 
     // Params
-    const email = req.body.email;
-    const lastName = req.body.lastName;
-    const firstName = req.body.firstName;
-    const password = req.body.password;
+    let email = req.body.email;
+    let lastName = req.body.lastName;
+    let firstName = req.body.firstName;
+    let password = req.body.password;
 
 
     // Verify usernam length, mail regex, password etc.
@@ -80,7 +80,7 @@ module.exports = {
     ], function(newUser) {
       if (newUser) {
         return res.status(201).json({
-          'userId': newUser.id
+          'IdUSERS': newUser.id
         });
       } else {
         return res.status(500).json({ 'error': 'cannot add user' });
@@ -128,12 +128,36 @@ module.exports = {
     ], function(userFound) {
       if (userFound) {
         return res.status(201).json({
-          'userId': userFound.id,
+          'IdUSERS': userFound.id,
+          'userEmail': userFound.email,
+          'userLastName': userFound.lastName,
+          'userFirstName': userFound.firstName,
           'token': jwtUtils.generateTokenForUser(userFound)
         });
       } else {
         return res.status(500).json({ 'error': 'cannot log on user' });
       }
+    });
+  },
+  getUserProfil: function(req, res) {
+    //Getting auth header
+    let headerAuth = req.headers['authorization'];
+    let IdUSERS = jwtUtils.getUserId(headerAuth);
+
+    if (IdUSERS < 0)
+      return res.status(400).json({ 'error': 'wrong token' });
+
+    models.User.findOne({
+      attributes: [ 'id', 'email', 'lastName', 'firstName' ],
+      where: { id: IdUSERS }
+    }).then(function(user) {
+      if (user) {
+        res.status(201).json(user);
+      } else {
+        res.status(404).json({ 'error': 'user not found' });
+      }
+    }).catch(function(err) {
+      res.status(500).json({ 'error': 'cannot fetch user' });
     });
   },
 }
