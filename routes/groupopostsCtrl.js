@@ -37,7 +37,7 @@ console.log('test2')
           done(null, userFound);
         })
         .catch(function(err) {
-          return res.status(500).json({ 'error': 'unable to verify user' });
+          return res.status(401).json({ 'error': 'unable to verify user' });
         });
       },
       function(userFound, done) {
@@ -64,7 +64,7 @@ console.log('test2')
       if (newGroupopost) {
         return res.status(201).json(newGroupopost);
       } else {
-        return res.status(500).json({ 'error': 'cannot post message' });
+        return res.status(400).json({ 'error': 'cannot post message' });
       }
     });
   },
@@ -93,5 +93,30 @@ console.log('test2')
       console.log(err);
       res.status(500).json({ "error": "invalid fields" });
     });
+  },
+    deleteGroupopost: function(req, res) {
+        //req => userId, postId, user.isAdmin
+        let headerAuth = req.headers['authorization'];
+        let idUSERS = jwtUtils.getUserId(headerAuth);
+
+        models.User.findOne({
+            attributes: ['id', 'email', 'isAdmin'],
+            where: { id: idUSERS }
+        }).then(userFound => {
+        //Vérification que le demandeur est soit l'admin soit le poster (vérif aussi sur le front)
+        if (userFound && (userFound.isAdmin == true || userFound.id == idUSERS)) {
+        console.log('Suppression du post id :', id);
+        models.Groupopost.findOne({
+          where: { id: id }
+        }).then(function(groupoposts) {
+        if (groupoposts) {
+        models.Groupopost.destroy({
+        where: { id: id }
+        }).then(() => res.end())
+        .catch(err => res.status(500).json(err))
+        }
+        }).catch(err => res.status(500).json(err))
+        } else { res.status(403).json('Utilisateur non autorisé à supprimer ce post') }
+        }).catch(error => res.status(500).json(error));
+    }
   }
-}

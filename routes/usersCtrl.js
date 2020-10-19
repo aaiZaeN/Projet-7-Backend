@@ -132,6 +132,7 @@ module.exports = {
           'userEmail': userFound.email,
           'userLastName': userFound.lastName,
           'userFirstName': userFound.firstName,
+          'isAdmin': userFound.isAdmin,
           'token': jwtUtils.generateTokenForUser(userFound)
         });
       } else {
@@ -148,6 +149,33 @@ module.exports = {
       return res.status(400).json({ 'error': 'wrong token' });
 
     models.User.findOne({
+      attributes: [ 'id', 'email', 'lastName', 'firstName' ],
+      where: { id: IdUSERS }
+    }).then(function(user) {
+      if (user) {
+        res.status(201).json(user);
+      } else {
+        res.status(404).json({ 'error': 'user not found' });
+      }
+    }).catch(function(err) {
+      res.status(500).json({ 'error': 'cannot fetch user' });
+    });
+  },
+  //Delete account 
+  deleteUserProfil: function(req, res) {
+    //Getting auth header
+    let headerAuth = req.headers['authorization'];
+    let IdUSERS = jwtUtils.getUserId(headerAuth);
+
+    //params
+    let email    = req.body.email;
+    let password = req.body.password;
+
+    if (email == null ||  password == null) {
+      return res.status(400).json({ 'error': 'missing parameters' });
+    }
+    
+    models.User.destroy({
       attributes: [ 'id', 'email', 'lastName', 'firstName' ],
       where: { id: IdUSERS }
     }).then(function(user) {
