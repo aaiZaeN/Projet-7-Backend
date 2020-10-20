@@ -1,4 +1,8 @@
 'use strict';
+
+let moment = require('moment')
+const { DataTypes } = require('sequelize/types');
+
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('Comments', {
@@ -9,18 +13,31 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       idUSERS: {
-        type: Sequelize.INTEGER
+        allowNull: false,
+        type: Sequelize.INTEGER,
+        references: {
+          model: 'Users',
+          key: 'id'
+        }
       },
       groupopostId: {
-        type: Sequelize.INTEGER
+        allowNull: false,
+        type: Sequelize.INTEGER,
+        references: {
+          model: 'Groupoposts',
+          key: 'id'
+        }
       },
       content: {
+        allowNull: false,
         type: Sequelize.TEXT
       },
       attachment: {
+        allowNull: false,
         type: Sequelize.STRING
       },
       isLike: {
+        allowNull: false,
         type: Sequelize.INTEGER
       },
       createdAt: {

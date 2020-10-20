@@ -1,25 +1,49 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class Likes extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
-    static associate(models) {
-      // define association here
-    }
-  };
-  Likes.init({
-    groupopostId: DataTypes.INTEGER,
-    idUSERS: DataTypes.INTEGER,
+  let Like = sequelize.define('Like', {
+    groupopostId: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: 'Groupopost',
+        key: 'id'
+      }
+    },
+    userId: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: 'User',
+        key: 'id'
+      }
+    },
     isLike: DataTypes.INTEGER
-  }, {
-    sequelize,
-    modelName: 'Likes',
-  });
-  return Likes;
+  }, {});
+
+  Like.associate = function (models) {
+    // associations between tables
+    //Many to many association with a join table
+    models.User.belongsToMany(models.Groupopost, {
+      through: models.Like,
+      foreignKey: 'userId',
+      otherKey: 'groupopostId',
+    });
+
+    models.Groupopost.belongsToMany(models.User, {
+      through: models.Like,
+      foreignKey: 'groupopostId',
+      otherKey: 'userId',
+    });
+
+    models.Like.belongsTo(models.User, {
+      foreignKey: 'userId',
+      as: 'user',
+    });
+
+    models.Like.belongsTo(models.Groupopost, {
+      foreignKey: 'groupopostId',
+      as: 'groupopost',
+    });
+
+
+  };
+  return Like;
 };
