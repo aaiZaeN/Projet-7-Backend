@@ -185,17 +185,32 @@ module.exports = {
             models.Groupopost.destroy({
               where: { id: IdUSERS }
             })
-          })
-          .then(groupopostFound => {
-            models.User.destroy({
-              where: { id: IdUSERS }
+            .then(userFound => {
+              models.Like.destroy({
+                  where: { IdUSERS: 14 }
+              })
+                  .then(likeFound => {
+                      models.Comment.destroy({
+                          where: { userId: IdUSERS }
+                      })
+                  })
+                  .then(commentFound => {
+                      models.Groupopost.destroy({
+                          where: { userId: IdUSERS }
+                      })
+                  })
+                  .then(groupopostFound => {
+                      models.User.destroy({
+                          where: { id: IdUSERS }
+                      })
+                      return res.status(201).json(groupopostFound);
+                  })
+                  .catch(err => {
+                      return res.status(500).json({ 'error': 'Impossible de supprimer le groupopost' });
+                  });
             })
-            return res.status(201).json(groupopostFound);
           })
-          .catch(err => {
-            return res.status(500).json({ 'error': 'Impossible! '});
-          });
         }
       ])
-    }
   }
+}

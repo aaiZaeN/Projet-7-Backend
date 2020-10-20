@@ -95,21 +95,53 @@ console.log('test2')
     });
   },
 
-     /** Deletes one Groupopost **/
-     deleteOneGroupopost: function (req, res) {
+     /** Gets one message after clicking on dashboard **/
+     listOneGroupopost: function (req, res) {
+      models.Groupopost.findByPk(req.params.id)
+          .then(groupoposts => {
+              if (groupoposts) {
+                  res.status(200).json(groupoposts);
+              } else {
+                  res.status(404).json({ "error": "Pas de groupopost trouvé" });
+              }
+          })
+          .catch(err => {
+              console.log(err);
+              res.status(500).json({ "error": "invalid fields" });
+          });
+  },
+
+    /** Deletes one groupopost **/
+    deleteOneGroupopost: function (req, res) {
       //Params
-      let id = req.body.id
+      let groupopostId = req.params.id
 
       asyncLib.waterfall([
-          //Deletes comments and likes of message and the Deletes the message
+          //Deletes comments and likes of message and the Deletes the groupopost
           function (done) {
-              models.Groupopost.destroy({
-                  where: { id: id }
+              models.Comment.destroy({
+                  where: { groupopostId: groupopostId }
               })
-              return res.status(201).json('Ok!!!')
+                  .then(likesFound => {
+                      models.Like.destroy({
+                          where: { groupopostId: groupopostId }
+                      })
+                      done(likesFound);
+                  })
+                  .catch(err => {
+                      return res.status(500).json({ 'error': 'Pas possible de supprimer les commentaires ou les likes' });
+                  })
+                  .then(commentsFound => {
+                      models.Groupopost.destroy({
+                          where: { id: groupopostId }
+                      })
+                      return res.status(201).json(commentsFound)
+                  })
+                  .catch(err => {
+                      return res.status(500).json({ 'error': 'Pas possible de supprimer le groupopost' });
+                  });
           }
       ])
   },
-
-
-  }
+     ///////DELETE IMAGE ////////
+}
