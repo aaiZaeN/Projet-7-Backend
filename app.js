@@ -2,9 +2,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const apiRouter = require('./apiRouter').router;
-const morgan = require('morgan');
-const errorHandler = require('errorhandler');
-const path = require('path');
 
 // Instantiate app
 const app = express();
@@ -21,7 +18,6 @@ app.use((req, res, next) => {
 // Body Parser configuration
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-
 
 // Configure routes
 app.get('/', function (req, res) {

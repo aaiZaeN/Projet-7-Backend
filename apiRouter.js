@@ -17,7 +17,7 @@ exports.router = (function() {
   // Groupoposts routes
   apiRouter.route('/groupoposts').post(groupopostsCtrl.createGroupopost);
   apiRouter.route('/groupoposts').get(groupopostsCtrl.listGroupoposts);
-  apiRouter.route('/groupoposts/delete').delete(groupopostsCtrl.deleteOneGroupopost);
+  apiRouter.route('/groupoposts/delete').delete(groupopostsCtrl.deleteGroupopost);
 
   return apiRouter;
 })();

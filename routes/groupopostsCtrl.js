@@ -94,54 +94,28 @@ console.log('test2')
       res.status(500).json({ "error": "invalid fields" });
     });
   },
+    deleteGroupopost: function(req, res) {
+        let headerAuth = req.headers['authorization'];
+        let idUSERS = jwtUtils.getUserId(headerAuth);
 
-     /** Gets one message after clicking on dashboard **/
-     listOneGroupopost: function (req, res) {
-      models.Groupopost.findByPk(req.params.id)
-          .then(groupoposts => {
-              if (groupoposts) {
-                  res.status(200).json(groupoposts);
-              } else {
-                  res.status(404).json({ "error": "Pas de groupopost trouvé" });
-              }
-          })
-          .catch(err => {
-              console.log(err);
-              res.status(500).json({ "error": "invalid fields" });
-          });
-  },
-
-    /** Deletes one groupopost **/
-    deleteOneGroupopost: function (req, res) {
-      //Params
-      let groupopostId = req.params.id
-
-      asyncLib.waterfall([
-          //Deletes comments and likes of message and the Deletes the groupopost
-          function (done) {
-              models.Comment.destroy({
-                  where: { groupopostId: groupopostId }
-              })
-                  .then(likesFound => {
-                      models.Like.destroy({
-                          where: { groupopostId: groupopostId }
-                      })
-                      done(likesFound);
-                  })
-                  .catch(err => {
-                      return res.status(500).json({ 'error': 'Pas possible de supprimer les commentaires ou les likes' });
-                  })
-                  .then(commentsFound => {
-                      models.Groupopost.destroy({
-                          where: { id: groupopostId }
-                      })
-                      return res.status(201).json(commentsFound)
-                  })
-                  .catch(err => {
-                      return res.status(500).json({ 'error': 'Pas possible de supprimer le groupopost' });
-                  });
-          }
-      ])
-  },
-     ///////DELETE IMAGE ////////
-}
+        models.User.findOne({
+            attributes: ['id', 'isAdmin'],
+            where: { id: idUSERS }
+        }).then(userFound => {
+        //Vérification que le demandeur est soit l'admin soit le créateur du Goupopost 
+        if (userFound && (userFound.isAdmin == true || userFound.id == idUSERS)) {
+        console.log('Suppression du post id :', id);
+        models.Groupopost.findOne({
+          where: { id: id }
+        }).then(function(groupoposts) {
+        if (groupoposts) {
+        models.Groupopost.destroy({
+        where: { id: id }
+        }).then(() => res.end())
+        .catch(err => res.status(500).json(err))
+        }
+        }).catch(err => res.status(500).json(err))
+        } else { res.status(403).json('Utilisateur non autorisé à supprimer ce post') }
+        }).catch(error => res.status(500).json(error));
+    }
+  }
