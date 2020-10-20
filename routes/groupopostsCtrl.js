@@ -79,7 +79,7 @@ console.log('test2')
     }
 
     models.Groupopost.findAll({
-      order: [(order != null) ? order.split(':') : ['title', 'ASC']],
+      order: [(order != null) ? order.split(':') : ['updatedAt', 'DESC']],
       attributes: (fields !== '*' && fields != null) ? fields.split(',') : null,
       limit: (!isNaN(limit)) ? limit : null,
       offset: (!isNaN(offset)) ? offset : null
@@ -94,29 +94,22 @@ console.log('test2')
       res.status(500).json({ "error": "invalid fields" });
     });
   },
-    deleteGroupopost: function(req, res) {
-        //req => userId, postId, user.isAdmin
-        let headerAuth = req.headers['authorization'];
-        let idUSERS = jwtUtils.getUserId(headerAuth);
 
-        models.User.findOne({
-            attributes: ['id', 'email', 'isAdmin'],
-            where: { id: idUSERS }
-        }).then(userFound => {
-        //Vérification que le demandeur est soit l'admin soit le poster (vérif aussi sur le front)
-        if (userFound && (userFound.isAdmin == true || userFound.id == idUSERS)) {
-        console.log('Suppression du post id :', id);
-        models.Groupopost.findOne({
-          where: { id: id }
-        }).then(function(groupoposts) {
-        if (groupoposts) {
-        models.Groupopost.destroy({
-        where: { id: id }
-        }).then(() => res.end())
-        .catch(err => res.status(500).json(err))
-        }
-        }).catch(err => res.status(500).json(err))
-        } else { res.status(403).json('Utilisateur non autorisé à supprimer ce post') }
-        }).catch(error => res.status(500).json(error));
-    }
+     /** Deletes one Groupopost **/
+     deleteOneGroupopost: function (req, res) {
+      //Params
+      let id = req.body.id
+
+      asyncLib.waterfall([
+          //Deletes comments and likes of message and the Deletes the message
+          function (done) {
+              models.Groupopost.destroy({
+                  where: { id: id }
+              })
+              return res.status(201).json('Ok!!!')
+          }
+      ])
+  },
+
+
   }

@@ -174,18 +174,28 @@ module.exports = {
     if (email == null ||  password == null) {
       return res.status(400).json({ 'error': 'missing parameters' });
     }
-    
-    models.User.destroy({
-      attributes: [ 'id', 'email', 'lastName', 'firstName' ],
-      where: { id: IdUSERS }
-    }).then(function(user) {
-      if (user) {
-        res.status(201).json(user);
-      } else {
-        res.status(404).json({ 'error': 'user not found' });
-      }
-    }).catch(function(err) {
-      res.status(500).json({ 'error': 'cannot fetch user' });
-    });
-  },
-}
+
+      asyncLib.waterfall([
+        function (done) {
+          models.User.findOne({
+            attributes: [ 'id', 'lastName', 'firstName'],
+            where: { id: IdUSERS }
+          })
+          .then(userFound => {
+            models.Groupopost.destroy({
+              where: { id: IdUSERS }
+            })
+          })
+          .then(groupopostFound => {
+            models.User.destroy({
+              where: { id: IdUSERS }
+            })
+            return res.status(201).json(groupopostFound);
+          })
+          .catch(err => {
+            return res.status(500).json({ 'error': 'Impossible! '});
+          });
+        }
+      ])
+    }
+  }

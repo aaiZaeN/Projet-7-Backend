@@ -1,14 +1,22 @@
 'use strict';
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('Groupoposts', {
+    await queryInterface.createTable('Likes', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      UserId: {
+      groupopostId: {
+        allowNull: false,
+        type: Sequelize.INTEGER,
+        references: {
+          model: 'Groupoposts',
+          key: 'id'
+        }
+      },
+      idUSERS: {
         allowNull: false,
         type: Sequelize.INTEGER,
         references: {
@@ -16,28 +24,17 @@ module.exports = {
           key: 'id'
         }
       },
-      title: {
+      isLike: {
         allowNull: false,
-        type: Sequelize.STRING
-      },
-      content: {
-        allowNull: false,
-        type: Sequelize.TEXT
-      },
-      attachment: {
-        allowNull: false,
-        type: Sequelize.TEXT
-      },
-      likes: {
-        allowNull: false,
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
+        references: {
+          model: 'Likes',
+          key: 'id'
+        }
       },
       createdAt: {
         allowNull: false,
-        type: Sequelize.DATE,
-        get() {
-          return moment(this.getDataValue('createdAt')).format('DD/MM/YYYY h:mm:ss');
-        }
+        type: Sequelize.DATE
       },
       updatedAt: {
         allowNull: false,
@@ -46,6 +43,6 @@ module.exports = {
     });
   },
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('Groupoposts');
+    await queryInterface.dropTable('Likes');
   }
 };
