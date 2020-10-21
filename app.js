@@ -23,14 +23,11 @@ app.use(bodyParser.json());
 app.get('/', function (req, res) {
   res.setHeader('Content-Type', 'text/html');
   res.status(200).send('Bienvenue sur mon serveur :)');
-
 });
 
-
-app.use('/api/', apiRouter);
-
+//app.use('/api/', apiRouter);
 
 // Launch server
 app.listen(8080, function() {
-  console.log('Server en écoute :)')
+  console.log('Serveur en écoute :)')
 });

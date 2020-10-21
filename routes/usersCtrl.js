@@ -14,22 +14,17 @@ module.exports = {
 
     // Params
     let email = req.body.email;
-    let lastName = req.body.lastName;
-    let firstName = req.body.firstName;
+    let username = req.body.username;
     let password = req.body.password;
 
 
     // Verify usernam length, mail regex, password etc.
-    if (email == null || lastName == null || firstName == null || password == null) {
+    if (email == null || username == null || password == null) {
       return res.status(400).json({ 'error': 'missing parameters' });
     }
 
-    if (lastName.length >= 13 || lastName.length <=2) {
+    if (username.length >= 13 || username.length <=2) {
       return res.status(400).json({ 'error': 'wrong last name (must be length 5-12' });
-    }
-
-    if (firstName.length >= 13 || firstName.length <=2) {
-      return res.status(400).json({ 'error': 'wrong first name (must be length 5-12' });
     }
 
     if (!emailRegex.test(email)) {
@@ -65,8 +60,7 @@ module.exports = {
       function(userFound, bcryptedPassword, done) {
         let newUser = models.User.create({
           email: email,
-          lastName: lastName,
-          firstName: firstName,
+          username: username,
           password: bcryptedPassword,
           isAdmin: 0
         })
@@ -80,7 +74,7 @@ module.exports = {
     ], function(newUser) {
       if (newUser) {
         return res.status(201).json({
-          'IdUSERS': newUser.id
+          'userId': newUser.id
         });
       } else {
         return res.status(500).json({ 'error': 'cannot add user' });
@@ -128,10 +122,9 @@ module.exports = {
     ], function(userFound) {
       if (userFound) {
         return res.status(201).json({
-          'IdUSERS': userFound.id,
+          'userId': userFound.id,
           'userEmail': userFound.email,
-          'userLastName': userFound.lastName,
-          'userFirstName': userFound.firstName,
+          'username': userFound.username,
           'isAdmin': userFound.isAdmin,
           'token': jwtUtils.generateTokenForUser(userFound)
         });
@@ -143,9 +136,9 @@ module.exports = {
   getUserProfil: function(req, res) {
     //Getting auth header
     let headerAuth = req.headers['authorization'];
-    let IdUSERS = jwtUtils.getUserId(headerAuth);
+    let userId = jwtUtils.getUserId(headerAuth);
 
-    if (IdUSERS < 0)
+    if (userId < 0)
       return res.status(400).json({ 'error': 'wrong token' });
 
     models.User.findOne({
@@ -165,7 +158,7 @@ module.exports = {
   deleteUserProfil: function(req, res) {
     //Getting auth header
     let headerAuth = req.headers['authorization'];
-    let IdUSERS = jwtUtils.getUserId(headerAuth);
+    let userId = jwtUtils.getUserId(headerAuth);
 
     //params
     let email    = req.body.email;
@@ -174,43 +167,18 @@ module.exports = {
     if (email == null ||  password == null) {
       return res.status(400).json({ 'error': 'missing parameters' });
     }
-
-      asyncLib.waterfall([
-        function (done) {
-          models.User.findOne({
-            attributes: [ 'id', 'lastName', 'firstName'],
-            where: { id: IdUSERS }
-          })
-          .then(userFound => {
-            models.Groupopost.destroy({
-              where: { id: IdUSERS }
-            })
-            .then(userFound => {
-              models.Like.destroy({
-                  where: { IdUSERS: 14 }
-              })
-                  .then(likeFound => {
-                      models.Comment.destroy({
-                          where: { userId: IdUSERS }
-                      })
-                  })
-                  .then(commentFound => {
-                      models.Groupopost.destroy({
-                          where: { userId: IdUSERS }
-                      })
-                  })
-                  .then(groupopostFound => {
-                      models.User.destroy({
-                          where: { id: IdUSERS }
-                      })
-                      return res.status(201).json(groupopostFound);
-                  })
-                  .catch(err => {
-                      return res.status(500).json({ 'error': 'Impossible de supprimer le groupopost' });
-                  });
-            })
-          })
-        }
-      ])
-  }
+    
+    models.User.destroy({
+      attributes: [ 'id', 'email', 'lastName', 'firstName' ],
+      where: { id: userId }
+    }).then(function(user) {
+      if (user) {
+        res.status(201).json(user);
+      } else {
+        res.status(404).json({ 'error': 'user not found' });
+      }
+    }).catch(function(err) {
+      res.status(500).json({ 'error': 'cannot fetch user' });
+    });
+  },
 }

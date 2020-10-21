@@ -9,11 +9,11 @@ const contentLimit = 2;
 const itemsLimit = 50;
 // Routes
 module.exports = {
-  createGroupopost: function(req, res) {
+  createMessage: function(req, res) {
     // Getting auth header
     console.log('test1')
     let headerAuth = req.headers['authorization'];
-    let idUSERS = jwtUtils.getUserId(headerAuth);
+    let userId = jwtUtils.getUserId(headerAuth);
 
     // Params
     let title   = req.body.title;
@@ -30,7 +30,7 @@ console.log('test2')
     asyncLib.waterfall([
       function(done) {
         models.User.findOne({
-          where: { id: idUSERS }
+          where: { id: userId }
         })
         .then(function(userFound) {
           console.log('test3', userFound)
@@ -44,31 +44,31 @@ console.log('test2')
         console.log('test3', {
           title  : title,
           content: content,
-          IdUSERS : userFound.id
+          UserId : userFound.id
         })
         if(userFound) {
-          models.Groupopost.create({
+          models.Message.create({
             title  : title,
             content: content,
             UserId: userFound.id
           })
-          .then(function(newGroupopost) {
+          .then(function(newMessage) {
             console.log('test4')
-            done(newGroupopost);
+            done(newMessage);
           }).catch(err => {console.log('err', err)})
         } else {
             res.status(404).json({ 'error': 'user not found' });
         }
       },
-    ], function(newGroupopost) {
-      if (newGroupopost) {
-        return res.status(201).json(newGroupopost);
+    ], function(newMessage) {
+      if (newMessage) {
+        return res.status(201).json(newMessage);
       } else {
         return res.status(400).json({ 'error': 'cannot post message' });
       }
     });
   },
-  listGroupoposts: function(req, res) {
+  listMessages: function(req, res) {
     let fields  = req.query.fields;
     let limit   = parseInt(req.query.limit);
     let offset  = parseInt(req.query.offset);
@@ -78,14 +78,14 @@ console.log('test2')
       limit = itemsLimit;
     }
 
-    models.Groupopost.findAll({
-      order: [(order != null) ? order.split(':') : ['updatedAt', 'DESC']],
+    models.Message.findAll({
+      order: [(order != null) ? order.split(':') : ['title', 'ASC']],
       attributes: (fields !== '*' && fields != null) ? fields.split(',') : null,
       limit: (!isNaN(limit)) ? limit : null,
       offset: (!isNaN(offset)) ? offset : null
-    }).then(function(groupoposts) {
-      if (groupoposts) {
-        res.status(200).json(groupoposts);
+    }).then(function(messages) {
+      if (messages) {
+        res.status(200).json(messages);
       } else {
         res.status(404).json({ "error": "no messages found" });
       }
@@ -94,22 +94,23 @@ console.log('test2')
       res.status(500).json({ "error": "invalid fields" });
     });
   },
-    deleteGroupopost: function(req, res) {
+    deleteMessage: function(req, res) {
+        //req => userId, postId, user.isAdmin
         let headerAuth = req.headers['authorization'];
-        let idUSERS = jwtUtils.getUserId(headerAuth);
+        let userId = jwtUtils.getUserId(headerAuth);
 
         models.User.findOne({
-            attributes: ['id', 'isAdmin'],
-            where: { id: idUSERS }
+            attributes: ['id', 'email', 'isAdmin'],
+            where: { id: userId }
         }).then(userFound => {
-        //Vérification que le demandeur est soit l'admin soit le créateur du Goupopost 
+        //Vérification que le demandeur est soit l'admin soit le poster (vérif aussi sur le front)
         if (userFound && (userFound.isAdmin == true || userFound.id == idUSERS)) {
         console.log('Suppression du post id :', id);
-        models.Groupopost.findOne({
+        models.Message.findOne({
           where: { id: id }
-        }).then(function(groupoposts) {
-        if (groupoposts) {
-        models.Groupopost.destroy({
+        }).then(function(messages) {
+        if (messages) {
+        models.Message.destroy({
         where: { id: id }
         }).then(() => res.end())
         .catch(err => res.status(500).json(err))
