@@ -24,7 +24,7 @@ module.exports = {
     }
 
     if (username.length >= 13 || username.length <=2) {
-      return res.status(400).json({ 'error': 'wrong last name (must be length 5-12' });
+      return res.status(400).json({ 'error': 'wrong username (must be length 5-12' });
     }
 
     if (!emailRegex.test(email)) {
@@ -123,7 +123,6 @@ module.exports = {
       if (userFound) {
         return res.status(201).json({
           'userId': userFound.id,
-          'userEmail': userFound.email,
           'username': userFound.username,
           'isAdmin': userFound.isAdmin,
           'token': jwtUtils.generateTokenForUser(userFound)
@@ -142,34 +141,7 @@ module.exports = {
       return res.status(400).json({ 'error': 'wrong token' });
 
     models.User.findOne({
-      attributes: [ 'id', 'email', 'lastName', 'firstName' ],
-      where: { id: IdUSERS }
-    }).then(function(user) {
-      if (user) {
-        res.status(201).json(user);
-      } else {
-        res.status(404).json({ 'error': 'user not found' });
-      }
-    }).catch(function(err) {
-      res.status(500).json({ 'error': 'cannot fetch user' });
-    });
-  },
-  //Delete account 
-  deleteUserProfil: function(req, res) {
-    //Getting auth header
-    let headerAuth = req.headers['authorization'];
-    let userId = jwtUtils.getUserId(headerAuth);
-
-    //params
-    let email    = req.body.email;
-    let password = req.body.password;
-
-    if (email == null ||  password == null) {
-      return res.status(400).json({ 'error': 'missing parameters' });
-    }
-    
-    models.User.destroy({
-      attributes: [ 'id', 'email', 'lastName', 'firstName' ],
+      attributes: [ 'id', 'email', 'username' ],
       where: { id: userId }
     }).then(function(user) {
       if (user) {
@@ -181,4 +153,34 @@ module.exports = {
       res.status(500).json({ 'error': 'cannot fetch user' });
     });
   },
-}
+  //Delete account 
+  deleteUserProfile: function (req, res) {
+    // Getting auth header
+    let headerAuth = req.headers['authorization'];
+    let userId1 = jwtUtils.getUserId(headerAuth);
+    
+
+    asyncLib.waterfall([
+        function (done) {
+            models.User.findOne({
+                attributes: ['id', 'username'],
+                where: { id: userId1 }
+            })
+            .then(done => {
+              models.Message.destroy({
+                where: { userId: userId1 }
+              })
+            })
+            .then(messageFound => {
+              models.User.destroy({
+                where: { id: userId1 }
+              })
+              return res.status(201).json(messageFound);
+            })
+            .catch(err => {
+              return res.status(500).json({ 'error': 'Pas possible de supprimer le message' });
+            });
+          }
+      ])   
+    }
+  }
