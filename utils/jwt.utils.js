@@ -7,30 +7,31 @@ const JWT_SIGN_SECRET = '544jdbsg55slkgcjcjkjk445v55dvsjf44qq4f4v1q';
 module.exports = {
   generateTokenForUser: function(userData) {
     return jwt.sign({
-      idUSERS: userData.id,
+      username: userData.username,
+      userId: userData.id,
       isAdmin: userData.isAdmin,
-      lastName: userData.lastName,
-      firstName: userData.firstName,
       email: userData.email
     },
     JWT_SIGN_SECRET,
     {
-      expiresIn: '1h'
+      expiresIn: '24h'
     })
   },
   parseAuthorization: function(authorization) {
     return (authorization != null) ? authorization.replace('Bearer ', '') : null;
   },
   getUserId: function(authorization) {
-    let idUSERS = -1;
+    let userId = -1;
     let token = module.exports.parseAuthorization(authorization);
     if(token != null) {
       try {
         let jwtToken = jwt.verify(token, JWT_SIGN_SECRET);
         if(jwtToken != null)
-          idUSERS = jwtToken.idUSERS;
+          username = jwtToken.username;
+          userId = jwtToken.userId;
+          isAdmin = jwtToken.isAdmin;
       } catch(err) { console.log(err)}
     }
-    return idUSERS;
+    return userId;
   }
 }

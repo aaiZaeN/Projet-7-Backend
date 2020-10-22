@@ -9,19 +9,28 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       idUSERS: {
-        type: Sequelize.INTEGER
+        allowNull: false,
+        type: Sequelize.INTEGER,
+        references: {
+          model: 'Users',
+          key: 'id'
+        }
       },
       groupopostId: {
-        type: Sequelize.INTEGER
+        allowNull: false,
+        type: Sequelize.INTEGER,
+        references: {
+          model: 'Messages',
+          key: 'id'
+        }
       },
       content: {
+        allowNull: false,
         type: Sequelize.TEXT
       },
       attachment: {
+        allowNull: false,
         type: Sequelize.STRING
-      },
-      isLike: {
-        type: Sequelize.INTEGER
       },
       createdAt: {
         allowNull: false,
