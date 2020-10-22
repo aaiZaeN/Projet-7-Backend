@@ -26,7 +26,7 @@ exports.router = (function() {
   let upload = multer({ storage: storage })
 
   let apiRouter = express.Router();
-  const { static } = require('express');
+  const { static } = require('express'); 
   apiRouter.use('/images/', static('./images'));
 
   // CORS

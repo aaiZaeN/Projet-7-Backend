@@ -97,10 +97,20 @@ module.exports = {
     let content = req.body.content;
     let attachment = req.body.attachment;
 
+    
     if (title == null || content == null) {
       return res.status(400).json({ 'error': 'Rien à publier' });
     }
     console.log('test2')
+
+    if (req.file != undefined) {
+      attachmentURL = `${req.file.filename}`;
+    }
+    else {
+        attachmentURL == null
+    };
+
+    
 
     asyncLib.waterfall([
 
@@ -128,6 +138,7 @@ module.exports = {
             title  : title,
             content: content,
             UserId: userFound.id,
+            attachment: attachmentURL
           })
           .then(function(newMessage) {
             console.log('test4')
@@ -157,10 +168,10 @@ module.exports = {
     
     
     models.Message.findAll({
-      /*include: [{
+      include: [{
         model: models.User,
         attributes: ['username']
-      }],*/
+      }],
       order: [(order != null) ? order.split(':') : ['createdAt', 'DESC']],
       attributes: (fields !== '*' && fields != null) ? fields.split(',') : null,
       limit: (!isNaN(limit)) ? limit : null,
